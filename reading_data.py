@@ -112,6 +112,23 @@ def read_valued_edgelist(filepath, file_name, sep='\t'):
 
     return matrix
 
+def read_attribute_file(filepath, file_name, sep="\t"):
+    # Ensure the "Network Data" directory exists
+    output_dir = os.path.join(os.path.dirname(filepath), "Network Data")
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Read the attribute file from the CSV file
+    attributes = pd.read_csv(os.path.join(filepath, file_name), sep=sep)
+
+    # Sort the attribute file by the first column in alphabetical and numerical order
+    attributes = attributes.sort_values(by=attributes.columns[0], key=lambda col: col.astype(str))
+
+    #Save the attribute file to the "Network Data" directory with the same file name
+    output_path = os.path.join(output_dir, f"{os.path.splitext(file_name)[0]}_attributes.csv")
+    attributes.to_csv(output_path, sep=sep, index=False)
+
+    return attributes
+
 #tests
 #read_matrix("", "StateMigration2023.csv")
 #read_binary_edgelist_undirected("", "MadreSana_wave1.csv")
