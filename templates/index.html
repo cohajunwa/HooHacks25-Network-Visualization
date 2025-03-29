@@ -6,6 +6,11 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Network Visualizer</title>
     <link rel="stylesheet" href="./static/style.css">
+    <script>
+        function showError(message) {
+            alert(message);
+        }
+    </script>
   </head>
   <body>
     <div>
@@ -18,5 +23,11 @@
             <input type = submit value = Upload>
           </form>
     </div>
+
+    {% if error %}
+    <script>
+        showError("{{ error }}");
+    </script>
+    {% endif %}
     </body>
 </html>
