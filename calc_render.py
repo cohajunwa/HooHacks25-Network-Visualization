@@ -15,13 +15,19 @@ from dash import dcc, html, Input, Output, State
 import transforming_data as transform
 from scipy.stats import norm
 
-def read_input(edges, attributes = "not given"):
+def read_input(edges, attributes = 0):
     """Takes in two csv files. The directionality of the edge will be FROM rows TO columns"""
     
     df1 = pd.read_csv(edges, index_col=0)
     block_display = 0
-    if attributes == "not given":
+    if attributes == 0:
         block_display = 1
+        block_names = [f"block{i+1}" for i in range(df1.shape[0])]
+        rel_dict = {
+        block_names[i]: {"targets": {block_names[j]: df1.iloc[i, j] for j in range(df1.shape[1])}} for i in range(df1.shape[0])
+        }
+    
+        return rel_dict
     else:
         df2 = pd.read_csv(attributes, index_col=0)
 
@@ -68,6 +74,7 @@ def read_input(edges, attributes = "not given"):
         return graph_dict, df2, adj_matrix_df
     else: 
         return graph_dict, adj_matrix_df
+
 
 
 def make_x_graph(graph_dict, directed=False):
@@ -309,9 +316,8 @@ if __name__ == '__main__':
         print(observed_ei, p_value, confidence_interval)
 
     # Phase 2
-    graph_dict, adj_matrix_df = read_input("campnet.csv")
-    make_dash(g_dict)
-    G2 = make_x_graph(g_dict)
+    g_dict2= read_input("sample_blockmodeling.csv")
+    make_dash(g_dict2)
     #d2 = network_calculations(G2) # Static scalar values
 
     
