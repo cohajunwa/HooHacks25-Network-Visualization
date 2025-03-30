@@ -124,10 +124,10 @@ def reduced_block_matrix(matrix):
             indices_j = np.where(matrix.iloc[:, -1] == block_j)[0]
 
             # Calculate the density between the two blocks
-            density = np.sum(matrix.iloc[indices_i, indices_j]) / ((i - j) ** 2)
+            density = np.sum(np.sum(matrix.iloc[indices_i, indices_j].applymap(lambda x: x if isinstance(x, (int, float)) else 0))) / ((i - j) ** 2)
             if i - j == 0:
                 density = pd.Series(np.nan)
-            reduced_matrix[i, j] = density.iloc[0]
+            reduced_matrix[i, j] = density
 
     return reduced_matrix
 
@@ -178,7 +178,7 @@ def block_dictionary(matrix, labels):
     for i in range(len(labels)):
         if labels[i] not in block_dict:
             block_dict[labels[i]] = []
-        block_dict[labels[i]].append(matrix.index[i])
+        block_dict[labels[i]].append(matrix.iloc[i, 0])
 
     # Sort the block_dict by increasing numerical order of the keys
     block_dict = dict(sorted(block_dict.items()))
@@ -188,11 +188,19 @@ def block_dictionary(matrix, labels):
 def save_matrix(matrix, file_name, output_dir):
     """
     Saves the matrix to a CSV file in the specified output directory.
+    If the matrix has an extra row on top (likely a label), adds a corresponding column with matching values.
     """
+
+    # Ensure the matrix is a DataFrame
+    if not isinstance(matrix, pd.DataFrame):
+        matrix = pd.DataFrame(matrix)
+
     # Ensure the output directory exists
     os.makedirs(output_dir, exist_ok=True)
 
     # Save the matrix to a CSV file
     output_path = os.path.join(output_dir, f"{file_name}_blockmodeling.csv")
-    matrix.to_csv(output_path, sep=',', index=False)
+    matrix.reset_index(drop=True, inplace=True)
+    print(matrix)
+    matrix.to_csv(output_path, sep=',', index=True, index_label="Index")
     print(f"Matrix saved to {output_path}")
