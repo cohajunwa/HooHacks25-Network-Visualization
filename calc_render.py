@@ -4,6 +4,10 @@ import scipy
 import numpy as np
 import os
 import json
+import dash
+import dash_cytoscape as cyto
+from dash import html
+import math
 
 def read_input(edges, attributes):
     """Takes in two csv files. The directionality of the edge will be FROM rows TO columns
@@ -41,7 +45,7 @@ def read_input(edges, attributes):
 
 def make_x_graph(graph_dict, directed=False):
     """makes dict from input reader function above and makes it an object in networkx. This
-    is the 2nd function and is needed for calculations"""
+    is the 2nd function and is needed for calculations. You do not have to call this function!"""
     
     G = nx.DiGraph() if directed else nx.Graph()
 
@@ -58,14 +62,9 @@ def make_x_graph(graph_dict, directed=False):
 
     return G
 
-import dash
-import dash_cytoscape as cyto
-from dash import html
-import math
-
 def format_for_dash_cytoscape(graph_dict, G):
-    """Converts the graph dictionary into a format suitable for Dash Cytoscape (directed edges)."""
-    
+    """Converts the graph dictionary into a format suitable for Dash Cytoscape (directed edges).
+    You do not have to call this function comfort!"""
     elements = []
     node_positions = calculate_circular_positions(graph_dict, G)  # Get node positions dynamically
 
@@ -95,7 +94,15 @@ def node_calculation(G):
 
 def network_calculations(G):
     '''Top boc calculations for entire network, takes networkx object and outputs two values'''
-    pass
+    m = len(G.edges)
+    n = len(G.nodes)
+    d = m/(n*(n-1))
+
+    #node_groups = {"A": "Group1", "B": "Group1", "C": "Group2", "D": "Group2"}
+    #E = sum(1 for u, v in G.edges if node_groups[u] != node_groups[v])
+    #I = sum(1 for u, v in G.edges if node_groups[u] == node_groups[v])
+    #ei_index = (E - I) / (E + I) if (E + I) != 0 else 0    
+    return d
  
 
 def calculate_positions(graph_dict, G = None):
@@ -157,7 +164,7 @@ def calculate_circular_positions(graph_dict, G):
     radius_dict = {}
     for node, centrality in sorted_nodes:
         # Normalize the centrality to a radial distance (lower centrality gets larger radius)
-        radial_distance = (centrality - min_centrality) / centrality_range * 5000 + 100  # Adjust the range of distances
+        radial_distance = (centrality - min_centrality) / centrality_range * 1000 + 100  # Adjust the range of distances
         radius_dict[node] = radial_distance
 
     # Calculate positions based on circular layout with adjusted radii
@@ -175,7 +182,6 @@ def calculate_circular_positions(graph_dict, G):
 
 def make_dash(g_dict):
     """Makes dash visualization! Takes in dict from input reader and calls other functions in this script. Will output application"""
-
     G = make_x_graph(g_dict)
     cytoscape_elements = format_for_dash_cytoscape(g_dict, G)
 
@@ -198,9 +204,11 @@ def make_dash(g_dict):
     app.run_server(debug=True)
 
 if __name__ == '__main__':
-    # Example usage
+    # Example usage FOR COMFORT
     g_dict = read_input("example_book1.csv", "attributes.csv")
-    G = make_x_graph(g_dict)
-    print(json.dumps(g_dict, indent=4))
     make_dash(g_dict)
+
+    G = make_x_graph(g_dict)
+    dc, bc, cc = node_calculation(G) # Dynamically updated, must search for node ID in dict
+    d, ei = network_calculations(G) # Static scalar values
     
