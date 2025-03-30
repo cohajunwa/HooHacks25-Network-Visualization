@@ -3,7 +3,7 @@
 import pandas as pd
 import os
 
-def read_matrix(file_path, file_name, sep='\t'):
+def read_matrix(file_path, file_name, sep=','):
     # Ensure the "Network Data" directory exists
     output_dir = os.path.join(os.path.dirname(file_path), "Network Data")
     os.makedirs(output_dir, exist_ok=True)
@@ -17,7 +17,7 @@ def read_matrix(file_path, file_name, sep='\t'):
 
     return matrix
 
-def read_binary_edgelist_undirected(filepath, file_name, sep='\t'):
+def read_binary_edgelist_undirected(filepath, file_name, sep=','):
     # Ensure the "Network Data" directory exists
     output_dir = os.path.join(os.path.dirname(filepath), "Network Data")
     os.makedirs(output_dir, exist_ok=True)
@@ -25,10 +25,8 @@ def read_binary_edgelist_undirected(filepath, file_name, sep='\t'):
     # Read the binary edgelist from the CSV file
     edgelist = pd.read_csv(os.path.join(filepath, file_name), sep=sep)
 
-    # Split the first column into two using "," as the separator
-    edgelist[['sender', 'receiver']] = edgelist.iloc[:, 0].str.split(',', expand=True)
-    # Drop the first column from the edgelist
-    edgelist = edgelist.drop(edgelist.columns[0], axis=1)
+    # Label the columns of the edgelist
+    edgelist.columns = ['sender', 'receiver']
 
     # Get unique nodes from the edgelist
     unique_nodes = sorted(set(edgelist.iloc[0]).union(set(edgelist.iloc[1])))
@@ -49,7 +47,7 @@ def read_binary_edgelist_undirected(filepath, file_name, sep='\t'):
 
     return matrix
 
-def read_binary_edgelist_directed(filepath, file_name, sep='\t'):
+def read_binary_edgelist_directed(filepath, file_name, sep=','):
     # Ensure the "Network Data" directory exists
     output_dir = os.path.join(os.path.dirname(filepath), "Network Data")
     os.makedirs(output_dir, exist_ok=True)
@@ -57,10 +55,8 @@ def read_binary_edgelist_directed(filepath, file_name, sep='\t'):
     # Read the binary edgelist from the CSV file
     edgelist = pd.read_csv(os.path.join(filepath, file_name), sep=sep)
 
-    # Split the first column into two using "," as the separator
-    edgelist[['sender', 'receiver']] = edgelist.iloc[:, 0].str.split(',', expand=True)
-    # Drop the first column from the edgelist
-    edgelist = edgelist.drop(edgelist.columns[0], axis=1)
+    # Label the columns of the edgelist
+    edgelist.columns = ['sender', 'receiver']
 
     # Get unique nodes from the edgelist
     unique_nodes = sorted(set(edgelist.iloc[0]).union(set(edgelist.iloc[1])))
@@ -81,7 +77,7 @@ def read_binary_edgelist_directed(filepath, file_name, sep='\t'):
     return matrix
 
 
-def read_valued_edgelist(filepath, file_name, sep='\t'):
+def read_valued_edgelist(filepath, file_name, sep=','):
     # Ensure the "Network Data" directory exists
     output_dir = os.path.join(os.path.dirname(filepath), "Network Data")
     os.makedirs(output_dir, exist_ok=True)
@@ -89,10 +85,8 @@ def read_valued_edgelist(filepath, file_name, sep='\t'):
     # Read the valued edgelist from the CSV file
     edgelist = pd.read_csv(os.path.join(filepath, file_name), sep=sep)
 
-    # Split the first column into three using "," as the separator
-    edgelist[['sender', 'receiver', 'value']] = edgelist.iloc[:, 0].str.split(',', expand=True)
-    # Drop the first column from the edgelist
-    edgelist = edgelist.drop(edgelist.columns[0], axis=1)
+    # Label the columns of the edgelist
+    edgelist.columns = ['sender', 'receiver', 'value']
 
     # Get unique nodes from the edgelist
     unique_nodes = sorted(set(edgelist.iloc[:, 0]).union(set(edgelist.iloc[:, 1])))
@@ -112,7 +106,7 @@ def read_valued_edgelist(filepath, file_name, sep='\t'):
 
     return matrix
 
-def read_attribute_file(filepath, file_name, sep="\t"):
+def read_attribute_file(filepath, file_name, sep=","):
     # Ensure the "Network Data" directory exists
     output_dir = os.path.join(os.path.dirname(filepath), "Network Data")
     os.makedirs(output_dir, exist_ok=True)
