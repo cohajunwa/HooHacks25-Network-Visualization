@@ -205,24 +205,54 @@ def make_dash(g_dict):
     # app = dash.Dash(__name__)
 
     return html.Div([
-        cyto.Cytoscape(
+        html.Div([
+            cyto.Cytoscape(
             id='cytoscape-graph',
             elements=cytoscape_elements,
             layout={'name': 'preset'},  # 'preset' uses manually set positions
-            style={'width': '100%', 'height': '500px'},
+            style={'width': '100%', 'height': '300px'},
             stylesheet=[
                 {'selector': 'node', 'style': {'label': 'data(label)', 'background-color': 'data(color)'}},
                 {'selector': 'edge', 'style': {'curve-style': 'bezier', 'target-arrow-shape': 'triangle'}}
             ]
         ),
-        # dash.dcc.Store(id = 'selected-node'),
+        ], style={'width': '70%', 'display': 'inline-block'}),
 
-        # Textbox to display node attributes
+        # Sidebar for node attributes
         html.Div(
             id='node-attributes',
-            style={'marginTop': '20px', 'border': '1px solid black', 'padding': '10px', 'width': '50%'}
+            style={
+                'width': '28%', 
+                'border': '1px solid black', 
+                'padding': '10px', 
+                'height': '300px',  
+                'overflow': 'auto',  # Enables scrolling if content overflows
+                'font-family': 'Arial, sans-serif',
+                'border-radius': '10px'
+            }
         )
-    ])
+    ],  style={'display': 'flex'})
+
+
+    # return html.Div([
+    #     cyto.Cytoscape(
+    #         id='cytoscape-graph',
+    #         elements=cytoscape_elements,
+    #         layout={'name': 'preset'},  # 'preset' uses manually set positions
+    #         style={'width': '100%', 'height': '500px'},
+    #         stylesheet=[
+    #             {'selector': 'node', 'style': {'label': 'data(label)', 'background-color': 'data(color)'}},
+    #             {'selector': 'edge', 'style': {'curve-style': 'bezier', 'target-arrow-shape': 'triangle'}}
+    #         ]
+    #     ),
+    #     # dash.dcc.Store(id = 'selected-node'),
+
+    #     # Textbox to display node attributes
+    #     html.Div(
+    #         id='node-attributes',
+    #         style={'marginTop': '20px', 'border': '1px solid black', 'padding': '10px', 'width': '50%'}
+    #     )
+    # ])
 
     # Callback to update textbox with node's attributes
     # @app.callback(

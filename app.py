@@ -9,7 +9,7 @@ import os
 import json
 
 app = Flask(__name__)
-dash_app = dash.Dash(__name__, server=app, url_base_pathname="/dash/", external_stylesheets=['/static/style.css'])
+dash_app = dash.Dash(__name__, server=app, url_base_pathname="/dash/")
 
 app.secret_key = 'PLEASE_SAVE_THIS_SOMEWHERE_ELSE'
 
@@ -74,11 +74,17 @@ def create_network_graph(filenames):
 
     dash_app.layout = make_dash(g_dict)
     @dash_app.callback(
-        Output('node-attributes', 'children'),
+        [Output('node-attributes', 'children'), 
+        Output('cytoscape-graph', 'stylesheet')],
         Input('cytoscape-graph', 'selectedNodeData')  # Listens for node clicks
     )
     def display_node_attributes(selectedNodeData):
         """Displays attributes of the clicked node."""
+        default_stylesheet = [
+            {'selector': 'node', 'style': {'content': 'data(label)'}},
+            {'selector': 'edge', 'style': {'curve-style': 'bezier', 'target-arrow-shape': 'triangle'}}
+        ]
+
         if selectedNodeData and len(selectedNodeData) > 0:
             node_id = selectedNodeData[0]['id']  # Get the node's ID
             node_data = g_dict.get(node_id, {})
@@ -96,9 +102,13 @@ def create_network_graph(filenames):
             for centrality_measure, value in zip(centrality_measures, centrality_values):
                 attributes_text.append(dash.html.P(f"{centrality_measure}: {value}"))
 
-            return attributes_text
+            highlighted_stylesheet = default_stylesheet + [
+                {'selector': f'node[id = "{node_id}"]',
+                'style': {'background-color': 'red', 'border-width': '3px', 'border-color': 'black'}}
+            ]
+            return attributes_text, highlighted_stylesheet
         
-        return dash.html.P("Click on a node to see its attributes.")
+        return dash.html.P("Click on a node to see its attributes."), default_stylesheet
     # @dash_app.callback(
     #     Output('selected-node', 'data'),
     #     Input('cytoscape-graph', 'tapNodeData')

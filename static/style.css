@@ -130,3 +130,16 @@ iframe {
         height: 50vh; /* Adjust height when stacked vertically */
     }
 }
+
+.node-header {
+    font-family: 'Arial', sans-serif;
+    color: #333;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}
+
+.node-attribute {
+    font-family: 'Arial', sans-serif;
+    color: #555;
+    margin-bottom: 5px;
+}
