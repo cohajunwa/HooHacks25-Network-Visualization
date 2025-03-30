@@ -94,14 +94,20 @@ def ei_test(matrix, attribute_column, num_permutations=50):
     # Calculate the mean of E-I indices
     ei_mean = np.sum(ei_indices) / num_permutations
 
-    # Calculate how many standard deviations the observed E-I index is away from the mean
-    ei_z_score = (observed_ei - ei_mean) / ei_std_dev
-    
-    # Calculate the p-value for a two-tailed test
-    p_value = 2 * (1 - norm.cdf(abs(ei_z_score)))
+    # Check if standard deviation is zero to avoid division by zero
+    if ei_std_dev == 0:
+        ei_z_score = float('nan')
+        p_value = float('nan')
+        confidence_interval = [float('nan'), float('nan')]
+    else:
+        # Calculate how many standard deviations the observed E-I index is away from the mean
+        ei_z_score = (observed_ei - ei_mean) / ei_std_dev
+        
+        # Calculate the p-value for a two-tailed test
+        p_value = 2 * (1 - norm.cdf(abs(ei_z_score)))
 
-    # Calculate the confidence interval for the E-I mean
-    confidence_interval = [ei_mean - 1.96 * ei_std_dev, ei_mean + 1.96 * ei_std_dev]
+        # Calculate the confidence interval for the E-I mean
+        confidence_interval = [ei_mean - 1.96 * ei_std_dev, ei_mean + 1.96 * ei_std_dev]
 
     return observed_ei, p_value, confidence_interval
 
