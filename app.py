@@ -3,12 +3,13 @@ from werkzeug.utils import secure_filename
 from reading_data import read_attribute_file, read_matrix
 from calc_render import read_input, make_x_graph, node_calculation, network_calculations, make_dash
 from dash.dependencies import Input, Output, State
+from temp_e_i import calc_ei
 import dash
 import os
 import json
 
 app = Flask(__name__)
-dash_app = dash.Dash(__name__, server=app, url_base_pathname="/dash/")
+dash_app = dash.Dash(__name__, server=app, url_base_pathname="/dash/", external_stylesheets=['/static/style.css'])
 
 app.secret_key = 'PLEASE_SAVE_THIS_SOMEWHERE_ELSE'
 
@@ -121,34 +122,36 @@ def create_network_graph(filenames):
     #     # return dash.dcc.Location(href=f"/visualize/{node_id}", id="redirect-location")
     #     return redirect(url_for(f'visualize/{node_id}'))
     
-    return G
+    return G, df2, adj_matrix_df
 
 @app.route('/visualize', methods = ['GET', 'POST'])
 # @app.route('/visualize/<node_id>', methods=['GET', 'POST']) 
 def visualize(node_id = None):
     filenames = session.get("filenames", {})  # Retrieve filenames from session
     
-    G = create_network_graph(filenames)
+    G, df2, adj_matrix_df = create_network_graph(filenames)
 
     density = network_calculations(G) 
 
     network_density = density
 
-    # Dummy values for now
-    attributes = ['a', 'b', 'c']
-    ei_indices = [0.2, 0.3, 0.7]
+    attribute_names = df2.columns.tolist()
 
-    degree_centrality, closeness_centrality, betweenness_centrality = 0, 0, 0
-    if node_id:
-        degree_centrality = degree_centrality.get(node_id, 0)
-        closeness_centrality = closeness_centrality.get(node_id, 0)
-        betweenness_centrality = betweenness_centrality.get(node_id, 0)
+    df2.rename(columns={df2.columns[0]: "State"}, inplace=True)
+    attributes = df2.to_numpy()
+    
+    
+
+    attributes_col = []
+    ei_indices = []
+    for i in range(len(attributes[0])):
+        for row in attributes:
+            attributes_col.append(row[i])
+        ei_index = calc_ei(adj_matrix_df, attributes_col)
+        ei_indices.append(ei_index)
 
     return render_template('visuals.html', network_density=network_density, 
-                           ei_indices=zip(attributes, ei_indices),
-                           degree_centrality=degree_centrality, 
-                           closeness_centrality=closeness_centrality,
-                           betweenness_centrality=betweenness_centrality) 
+                           ei_indices=zip(attribute_names, ei_indices)) 
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
