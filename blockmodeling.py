@@ -2,6 +2,7 @@
 import networkx as nx
 import numpy as np
 import pandas as pd
+import os
 from sklearn.cluster import AgglomerativeClustering
 
 # Similarity measures for matrices
@@ -183,3 +184,15 @@ def block_dictionary(matrix, labels):
     block_dict = dict(sorted(block_dict.items()))
     
     return block_dict
+
+def save_matrix(matrix, file_name, output_dir):
+    """
+    Saves the matrix to a CSV file in the specified output directory.
+    """
+    # Ensure the output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Save the matrix to a CSV file
+    output_path = os.path.join(output_dir, f"{file_name}_blockmodeling.csv")
+    matrix.to_csv(output_path, sep=',', index=False)
+    print(f"Matrix saved to {output_path}")
