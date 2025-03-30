@@ -88,3 +88,21 @@ def symmetrize(file_path, file_name, method='minimum', sep='\t'):
     write_matrix(matrix, file_path, file_name, sep)
     
     return "Symmetrization complete. Matrix saved to " + os.path.join(file_path, file_name)
+
+def make_binary(matrix):
+    """
+    Converts a matrix to binary format.
+    """
+    matrix[matrix > 0] = 1
+    return matrix
+
+def produce_binary(file_path, file_name, sep='\t'):
+    """
+    Given a square matrix in the form of a Pandas DataFrame, the function:
+    Converts the matrix to binary format.
+    """
+    matrix = read_matrix(file_path, file_name, sep)
+    matrix = make_binary(matrix)
+    write_matrix(matrix, file_path, file_name, sep)
+
+    return "Binary matrix saved to " + os.path.join(file_path, file_name)
