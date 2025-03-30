@@ -5,23 +5,28 @@ import os
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "data/"
 
+ALLOWED_EXTENSIONS = {'csv'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/', methods = ['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
-        file = request.files.get('file')
+        relational_file = request.files.get('relational')
+        attribute_file = request.files.get('attribute')
         
-        if not file:
+        if not relational_file and not attribute_file:
             error = "No file selected. Please upload a .csv file"
             return render_template('index.html', error = error)
         
-        filename = secure_filename(file.filename)
-        if not file.filename.endswith('.csv'):
-            error = "Invalid file format! Please upload a .csv file"
-            return render_template('index.html', error = error)
-
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        return redirect(url_for('visualize', name = filename))
+        for file in [relational_file, attribute_file]:
+            if file and allowed_file(file.filename):
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+            elif file:
+                error = "Invalid file format! Please upload a .csv file"
+                return render_template('index.html', error = error)
+        return redirect(url_for('visualize'))
     return render_template('index.html' )
 
 

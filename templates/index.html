@@ -17,9 +17,20 @@
         <h1>Welcome to the Network Visualizer!</h1>
     </div>
     <div class="container">
-        <h2>Enter data (.csv format only)</h2>
+        <h2>Enter data</h2>
           <form method = post enctype=multipart/form-data>
-            <input type = file name = file accept = ".csv,.xlsx">
+            <div class="form-group">
+                <label for = 'relational'>Upload Relational Data:</label>
+                <input type = file name = relational accept = ".csv">
+            </div>
+            
+
+            <div class="form-group">
+                <label for = 'attribute'>Upload Attribute Data:</label>
+                <input type = file name = attribute accept = ".csv">
+            </div>
+            
+
             <input type = submit value = Upload>
           </form>
     </div>
