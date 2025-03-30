@@ -2,6 +2,7 @@
 import numpy as np
 import transforming_data as transform
 from scipy.stats import norm
+import pandas as pd
 
 def clean_matrix(matrix):
     """
@@ -11,6 +12,9 @@ def clean_matrix(matrix):
 
     # Replace NaN values with 0
     matrix = np.nan_to_num(matrix)
+
+    # Convert the matrix to a DataFrame
+    matrix = pd.DataFrame(matrix)
 
     # Symmetrize the matrix
     matrix = transform.symmetrize_maximum(matrix)
@@ -29,6 +33,9 @@ def calc_ei(matrix, attribute_column):
 
     # Get the number of nodes in the matrix
     n = matrix.shape[0]
+
+    # Convert the matrix to a numpy array
+    matrix = np.array(matrix)
 
     # Initialize variables to count edges within and between blocks
     I = 0
@@ -86,9 +93,12 @@ def ei_test(matrix, attribute_column, num_permutations=100):
     # Initialize a list to store E-I permutation scores
     ei_indices = []
 
+    #Initialize the number of ties into a variable
+    num_ties = np.sum(np.sum(matrix) // 2)
+
     # Perform the permutations
     while len(ei_indices) < num_permutations:
-        permuted_matrix = generate_ei_permutation(np.zeros_like(matrix), np.sum(matrix) // 2)
+        permuted_matrix = generate_ei_permutation(np.zeros_like(matrix), num_ties)
         ei_indices.append(calc_ei(permuted_matrix, attribute_column))
 
     # Calculate the standard deviation of E-I indices
@@ -182,13 +192,17 @@ def rescaled_ei(matrix, attribute_column):
 
     # Initialize the observed E-I index and the number of unique ties
     observed_ei = calc_ei(matrix, attribute_column)
-    num_ties = np.sum(matrix) // 2
+    num_ties = np.sum(np.sum(matrix) // 2)
 
     # Calculate the minimum and maximum E-I indices
     min_ei_index = min_ei(matrix, num_ties, attribute_column)
     max_ei_index = max_ei(matrix, num_ties, attribute_column)
 
     # Rescale the observed E-I index
-    rescaled_ei_index = (max_ei_index - min_ei_index) * (observed_ei - min_ei_index) / (max_ei_index - min_ei_index) + min_ei_index
+    actual_scale = max_ei_index - min_ei_index
+    if actual_scale == 0:
+        actual_scale = 1e-10
+
+    rescaled_ei_index = (max_ei_index - min_ei_index) * (observed_ei - min_ei_index) / actual_scale + min_ei_index
 
     return rescaled_ei_index
