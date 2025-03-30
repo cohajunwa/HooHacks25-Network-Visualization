@@ -185,10 +185,11 @@ def make_dash(g_dict):
     G = make_x_graph(g_dict)
     cytoscape_elements = format_for_dash_cytoscape(g_dict, G)
 
+    # dash_app = dash.Dash(__name__, server = app, url_base_pathname="/dash/")
     # Dash App
-    app = dash.Dash(__name__)
+    # app = dash.Dash(__name__)
 
-    app.layout = html.Div([
+    return html.Div([
         cyto.Cytoscape(
             id='cytoscape-graph',
             elements=cytoscape_elements,
@@ -198,17 +199,21 @@ def make_dash(g_dict):
                 {'selector': 'node', 'style': {'label': 'data(label)', 'background-color': 'data(color)'}},
                 {'selector': 'edge', 'style': {'curve-style': 'bezier', 'target-arrow-shape': 'triangle'}}
             ]
-        )
+        ),
+        dash.dcc.Store(id = 'selected-node')
     ])
 
-    app.run_server(debug=True)
+    
+    # return dash_app.layout
 
-if __name__ == '__main__':
-    # Example usage FOR COMFORT
-    g_dict = read_input("example_book1.csv", "attributes.csv")
-    make_dash(g_dict)
+    # app.run_server(debug=True)
 
-    G = make_x_graph(g_dict)
-    dc, bc, cc = node_calculation(G) # Dynamically updated, must search for node ID in dict
-    d, ei = network_calculations(G) # Static scalar values
+# if __name__ == '__main__':
+#     # Example usage FOR COMFORT
+#     g_dict = read_input("example_book1.csv", "attributes.csv")
+#     make_dash(g_dict)
+
+#     G = make_x_graph(g_dict)
+#     dc, bc, cc = node_calculation(G) # Dynamically updated, must search for node ID in dict
+#     d, ei = network_calculations(G) # Static scalar values
     

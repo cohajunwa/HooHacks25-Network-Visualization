@@ -18,7 +18,8 @@
     </div>
     <div class="row">
         <div class="column container">
-            <h2>Plotly viz here</h2>
+            <h2>Network Graph</h2>
+            <iframe src="/dash/" width="100%" height="90%" style="border:none;"></iframe>
         </div>
         <div class="column">
             <div class = "container">
@@ -38,9 +39,9 @@
                 <div>
                     <h2>Centrality Measures</h2>
                     <ul align = "left">
-                        <li><strong>Degree Centrality:</strong> {{degree_centrality}}</li>
-                        <li><strong>Closeness Centrality:</strong> {{closeness_centrality}}</li>
-                        <li><strong>Betweenness Centrality:</strong> {{betweenness_centrality}}</li>
+                        <li><strong>Degree Centrality:</strong> <span id = 'degree-centrality'>{{degree_centrality}}</span></li>
+                        <li><strong>Closeness Centrality:</strong> <span id = 'closeness-centrality'>{{closeness_centrality}}</span></li>
+                        <li><strong>Betweenness Centrality:</strong> <span id = 'betweenness-centrality'>{{betweenness_centrality}}</span></li>
                     </ul>
                 </div>
                 
@@ -53,5 +54,34 @@
         showError("{{ error }}");
     </script>
     {% endif %}
+
+    <script>
+        window.addEventListener("message", function(event) {
+            console.log("Received message from Dash:", event.data);
+    
+            if (event.data && event.data.degree !== undefined) {
+                document.getElementById("degree-centrality").innerText = event.data.degree.toFixed(4);
+                document.getElementById("closeness-centrality").innerText = event.data.closeness.toFixed(4);
+                document.getElementById("betweenness-centrality").innerText = event.data.betweenness.toFixed(4);
+            } else {
+                console.error("Invalid data received:", event.data);
+            }
+        }, false);
+    </script>
+
+    <!-- <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let cytoscapeGraph = document.getElementById('cytoscape-graph');
+            console.log(cytoscapeGraph)
+            cytoscapeGraph.addEventListener('click', function(event) {
+                let clickedNode = event.detail;
+                if (clickedNode && clickedNode.id) {
+                    document.getElementById('degree-centrality').innerText = data.degree;
+                    document.getElementById('closeness-centrality').innerText = data.closeness;
+                    document.getElementById('betweenness-centrality').innerText = data.betweenness;
+                }
+            });
+        });
+    </script> -->
     </body>
 </html>
