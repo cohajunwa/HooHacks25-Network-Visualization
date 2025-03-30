@@ -15,7 +15,7 @@ def pearson_correlation(matrix):
     result = np.zeros((n, n))
     for i in range(n):
         for j in range(n):
-            result[i, j] = np.corrcoef(matrix[i, :], matrix[j, :])[0, 1]
+            result[i, j] = np.corrcoef(matrix.iloc[i, :], matrix.iloc[j, :])[0, 1]
     return result
 
 def matches(matrix):
@@ -28,7 +28,7 @@ def matches(matrix):
     result = np.zeros((n, n))
     for i in range(n):
         for j in range(n):
-            matches = np.sum(matrix[i, :] == matrix[j, :])
+            matches = np.sum(matrix.iloc[i, :] == matrix.iloc[j, :])
             result[i, j] = matches / matrix.shape[1]
     return result
 
@@ -40,7 +40,7 @@ def agglomerative_clustering(similarity_matrix, num_blocks=2):
     # Convert the similarity matrix to a distance matrix
     distance_matrix = 1 - similarity_matrix
 
-    clusters = AgglomerativeClustering(affinity="precomputed", n_clusters=num_blocks, linkage="complete").fit(distance_matrix)
+    clusters = AgglomerativeClustering(metric="precomputed", n_clusters=num_blocks, linkage="complete").fit(distance_matrix)
 
     print(clusters.labels_)
 
@@ -58,6 +58,9 @@ def binary_hierarchical_clustering(matrix, num_blocks=2):
     # Perform agglomerative clustering
     labels = agglomerative_clustering(similarity_matrix, num_blocks)
 
+    # Add 1 to every value in labels
+    labels = [label + 1 for label in labels]
+
     return labels
 
 def valued_hierarchical_clustering(matrix, num_blocks=2):
@@ -69,6 +72,9 @@ def valued_hierarchical_clustering(matrix, num_blocks=2):
 
     # Perform agglomerative clustering
     labels = agglomerative_clustering(similarity_matrix, num_blocks)
+
+    # Add 1 to every value in labels
+    labels = [label + 1 for label in labels]
 
     return labels
 
@@ -95,7 +101,7 @@ def organize_blocks(matrix, attribute_matrix):
     sorted_attributes = attribute_matrix.sort_values(by=['Block', attribute_matrix.columns[0]])
 
     # Reorder the rows in the matrix based on the sorted attribute matrix
-    sorted_matrix = matrix[sorted_attributes.index, :]
+    sorted_matrix = matrix.loc[sorted_attributes.index, :]
 
     return sorted_matrix
 
@@ -104,7 +110,7 @@ def reduced_block_matrix(matrix):
     Returns a reduced block matrix, a matrix with individual blocks as rows and columns with the values representing their densities
     """
     # Get the unique blocks
-    unique_blocks = np.unique(matrix[:, -1])
+    unique_blocks = np.unique(matrix.iloc[:, -1])
 
     # Initialize the reduced block matrix
     reduced_matrix = np.zeros((len(unique_blocks), len(unique_blocks)))
@@ -113,12 +119,14 @@ def reduced_block_matrix(matrix):
     for i, block_i in enumerate(unique_blocks):
         for j, block_j in enumerate(unique_blocks):
             # Get the indices of the nodes in each block
-            indices_i = np.where(matrix[:, -1] == block_i)[0]
-            indices_j = np.where(matrix[:, -1] == block_j)[0]
+            indices_i = np.where(matrix.iloc[:, -1] == block_i)[0]
+            indices_j = np.where(matrix.iloc[:, -1] == block_j)[0]
 
             # Calculate the density between the two blocks
-            density = np.sum(matrix[indices_i][:, indices_j]) / (len(indices_i) * len(indices_j))
-            reduced_matrix[i, j] = density
+            density = np.sum(matrix.iloc[indices_i, indices_j]) / ((i - j) ** 2)
+            if i - j == 0:
+                density = pd.Series(np.nan)
+            reduced_matrix[i, j] = density.iloc[0]
 
     return reduced_matrix
 
@@ -130,3 +138,33 @@ def image_matrix(reduced_matrix, alpha=0.5):
     image_matrix = (reduced_matrix > alpha).astype(int)
 
     return image_matrix
+
+def binary_blockmodeling(matrix, num_blocks=2):
+    """
+    Performs blockmodeling on a binary matrix using hierarchical clustering.
+    """
+    # Perform hierarchical clustering on the binary matrix
+    labels = binary_hierarchical_clustering(matrix, num_blocks)
+    print("Labels:", labels)
+
+    # Label the blocks in the attribute matrix
+    labeled_matrix = label_blocks(matrix, labels)
+    print("Labeled Matrix:")
+    print(labeled_matrix)
+
+    # Organize the blocks in the matrix
+    organized_matrix = organize_blocks(matrix, labeled_matrix)
+    print("Organized Matrix:")
+    print(organized_matrix)
+
+    # Create a reduced block matrix
+    reduced_matrix = reduced_block_matrix(organized_matrix)
+    print("Reduced Block Matrix:")
+    print(reduced_matrix)
+
+    # Create an image matrix
+    img_matrix = image_matrix(reduced_matrix)
+    print("Image Matrix:")
+    print(img_matrix)
+
+    return (img_matrix, labels)

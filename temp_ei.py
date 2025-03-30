@@ -70,7 +70,7 @@ def generate_ei_permutation(matrix, num_ties):
 
     return new_matrix
 
-def ei_test(matrix, attribute_column, num_permutations=50):
+def ei_test(matrix, attribute_column, num_permutations=100):
     """
     Performs a permutation test for the E-I index.
     The test is performed by randomly permuting the edges in the matrix and calculating the E-I index for each permutation.
