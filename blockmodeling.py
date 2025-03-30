@@ -42,7 +42,7 @@ def agglomerative_clustering(similarity_matrix, num_blocks=2):
 
     clusters = AgglomerativeClustering(metric="precomputed", n_clusters=num_blocks, linkage="complete").fit(distance_matrix)
 
-    print(clusters.labels_)
+    #print(clusters.labels_)
 
     labels = clusters.labels_.tolist()
 
@@ -145,26 +145,41 @@ def binary_blockmodeling(matrix, num_blocks=2):
     """
     # Perform hierarchical clustering on the binary matrix
     labels = binary_hierarchical_clustering(matrix, num_blocks)
-    print("Labels:", labels)
+    #print("Labels:", labels)
 
     # Label the blocks in the attribute matrix
     labeled_matrix = label_blocks(matrix, labels)
-    print("Labeled Matrix:")
-    print(labeled_matrix)
+    #print("Labeled Matrix:")
+    #print(labeled_matrix)
 
     # Organize the blocks in the matrix
     organized_matrix = organize_blocks(matrix, labeled_matrix)
-    print("Organized Matrix:")
-    print(organized_matrix)
+    #print("Organized Matrix:")
+    #print(organized_matrix)
 
     # Create a reduced block matrix
     reduced_matrix = reduced_block_matrix(organized_matrix)
-    print("Reduced Block Matrix:")
-    print(reduced_matrix)
+    #print("Reduced Block Matrix:")
+    #print(reduced_matrix)
 
     # Create an image matrix
     img_matrix = image_matrix(reduced_matrix)
-    print("Image Matrix:")
-    print(img_matrix)
+    #print("Image Matrix:")
+    #print(img_matrix)
 
     return (img_matrix, labels)
+
+def block_dictionary(matrix, labels):
+    """
+    Creates a dictionary with the block number as the key and the corresponding nodes as the value.
+    """
+    block_dict = {}
+    for i in range(len(labels)):
+        if labels[i] not in block_dict:
+            block_dict[labels[i]] = []
+        block_dict[labels[i]].append(matrix.index[i])
+
+    # Sort the block_dict by increasing numerical order of the keys
+    block_dict = dict(sorted(block_dict.items()))
+    
+    return block_dict
