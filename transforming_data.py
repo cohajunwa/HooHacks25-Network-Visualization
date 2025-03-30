@@ -50,7 +50,7 @@ def symmetrize_maximum(matrix):
     for i in range(len(matrix)):
         for j in range(len(matrix)):
             if i != j:
-                matrix[i, j] = matrix[j, i] = max(matrix[i, j], matrix[j, i])
+                matrix.iloc[i, j] = matrix.iloc[j, i] = max(matrix.iloc[i, j], matrix.iloc[j, i])
 
     return matrix
 
@@ -74,6 +74,9 @@ def symmetrize(file_path, file_name, method='minimum', sep='\t'):
     """
 
     matrix = read_matrix(file_path, file_name, sep)
+
+    # Convert the matrix to a NumPy array for processing
+    matrix = matrix.to_numpy()
 
     if method == 'minimum':
         matrix = symmetrize_minimum(matrix)
