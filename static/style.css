@@ -8,7 +8,7 @@ body {
     align-items: center;
     justify-content: center;
     height: 100vh;
-    margin: 0;
+    margin: 20px;
     text-align: center;
 }
 
@@ -82,4 +82,51 @@ input[type="submit"]:hover {
 
 input[type="file"] {
     flex-grow: 1; /* Allows input to take available space */
+}
+
+.container-flex {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    height: 100vh;
+    padding: 20px;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
+}
+
+.graph-container {
+    flex: 3; /* Makes Dash container take more space */
+    margin-right: 20px; /* Adds space between graph and sidebar */
+    height: 80vh; /* Controls the height of the Dash container */
+    background-color: #f0f0f0; /* Optional background for contrast */
+    padding: 15px;
+    border-radius: 10px;
+    overflow-y: auto;
+}
+
+.sidebar-container {
+    flex: 1; /* Makes the sidebar smaller */
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    overflow-y: auto; /* Allow scrolling if content overflows */
+    height: 80vh; /* Matches the height of the Dash container */
+}
+
+iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* Make layout responsive on smaller screens */
+@media (max-width: 768px) {
+    .container-flex {
+        flex-direction: column; /* Stack elements vertically on small screens */
+    }
+
+    .graph-container,
+    .sidebar-container {
+        height: 50vh; /* Adjust height when stacked vertically */
+    }
 }

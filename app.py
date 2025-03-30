@@ -65,40 +65,66 @@ def create_network_graph(filenames):
     relational_file = os.path.join(app.config['UPLOAD_FOLDER'], relational_filename)
     attribute_file = os.path.join(app.config['UPLOAD_FOLDER'], attribute_filename)
     
-    g_dict = read_input(relational_file, attribute_file) # Produces dictionary to create graph
+    g_dict, df2, adj_matrix_df = read_input(relational_file, attribute_file) # Produces dictionary to create graph
     G = make_x_graph(g_dict) # Creates network graph
 
     degree_centrality, betweenness_centrality, closeness_centrality = node_calculation(G)
+    
 
     dash_app.layout = make_dash(g_dict)
-
     @dash_app.callback(
-        Output('selected-node', 'data'),
-        Input('cytoscape-graph', 'tapNodeData')
+        Output('node-attributes', 'children'),
+        Input('cytoscape-graph', 'selectedNodeData')  # Listens for node clicks
     )
-    def update_centrality(clicked_node):
-        if not clicked_node:
-            return {}
+    def display_node_attributes(selectedNodeData):
+        """Displays attributes of the clicked node."""
+        if selectedNodeData and len(selectedNodeData) > 0:
+            node_id = selectedNodeData[0]['id']  # Get the node's ID
+            node_data = g_dict.get(node_id, {})
+            attributes = node_data.get('attributes', {})
+            centrality_values = (degree_centrality.get(node_id, 0), betweenness_centrality.get(node_id, 0), closeness_centrality.get(node_id, 0))
+            centrality_measures = ['Degree Centrality', 'Betweenness Centrality', 'Closeness Centrality']
+            # Generate attribute text
+            attributes_text = [
+                dash.html.H4(f"Attributes of node {node_id}:")
+            ]
+            for key, value in attributes.items():
+                attributes_text.append(dash.html.P(f"{key}: {value}"))
 
-        node_id = clicked_node['id']
-        print(f"Node clicked: {node_id}", flush=True)
+            attributes_text.append(dash.html.H4(f"Centrality Measures"))
+            for centrality_measure, value in zip(centrality_measures, centrality_values):
+                attributes_text.append(dash.html.P(f"{centrality_measure}: {value}"))
 
-        # data = {
-        #     "degree": degree_centrality.get(node_id, 0),
-        #     "closeness": closeness_centrality.get(node_id, 0),
-        #     "betweenness": betweenness_centrality.get(node_id, 0)
-        # }
+            return attributes_text
+        
+        return dash.html.P("Click on a node to see its attributes.")
+    # @dash_app.callback(
+    #     Output('selected-node', 'data'),
+    #     Input('cytoscape-graph', 'tapNodeData')
+    # )
+    # def update_centrality(clicked_node):
+    #     if not clicked_node:
+    #         return {}
 
-        # print(f"Sending data to JavaScript: {data}", flush=True)
+    #     node_id = clicked_node['id']
+    #     print(f"Node clicked: {node_id}", flush=True)
 
-        # return data
-        # return dash.dcc.Location(href=f"/visualize/{node_id}", id="redirect-location")
-        return redirect(url_for(f'visualize/{node_id}'))
+    #     # data = {
+    #     #     "degree": degree_centrality.get(node_id, 0),
+    #     #     "closeness": closeness_centrality.get(node_id, 0),
+    #     #     "betweenness": betweenness_centrality.get(node_id, 0)
+    #     # }
+
+    #     # print(f"Sending data to JavaScript: {data}", flush=True)
+
+    #     # return data
+    #     # return dash.dcc.Location(href=f"/visualize/{node_id}", id="redirect-location")
+    #     return redirect(url_for(f'visualize/{node_id}'))
     
     return G
 
 @app.route('/visualize', methods = ['GET', 'POST'])
-@app.route('/visualize/<node_id>', methods=['GET', 'POST']) 
+# @app.route('/visualize/<node_id>', methods=['GET', 'POST']) 
 def visualize(node_id = None):
     filenames = session.get("filenames", {})  # Retrieve filenames from session
     

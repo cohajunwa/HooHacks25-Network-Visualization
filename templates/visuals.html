@@ -16,36 +16,23 @@
     <div>
         <h1>Network Visualization!</h1>
     </div>
-    <div class="row">
-        <div class="column container">
-            <h2>Network Graph</h2>
-            <iframe src="/dash/" width="100%" height="90%" style="border:none;"></iframe>
+    <div class="container-flex">
+        <div class="graph-container">
+            <iframe src="/dash/" width="100%" height="100%" style="border:none;"></iframe>
         </div>
-        <div class="column">
-            <div class = "container">
-                <h2>Global Measures</h2>
-                <ul align = "left">
-                    <li><strong>Network Density:</strong> {{network_density}}</li>
-                    <li><strong>E-I Indices</strong>
-                        <ul>
-                            {% for attribute, ei_index in ei_indices %}
+    
+        <div class="sidebar-container">
+            <h3>Global Measures</h3>
+            <ul align="left">
+                <li><strong>Network Density:</strong> {{network_density}}</li>
+                <li><strong>E-I Indices</strong>
+                    <ul>
+                        {% for attribute, ei_index in ei_indices %}
                             <li><strong>{{attribute}}:</strong> {{ei_index}}</li>
-                            {% endfor %}
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-            <div class = "container">
-                <div>
-                    <h2>Centrality Measures</h2>
-                    <ul align = "left">
-                        <li><strong>Degree Centrality:</strong> <span id = 'degree-centrality'>{{degree_centrality}}</span></li>
-                        <li><strong>Closeness Centrality:</strong> <span id = 'closeness-centrality'>{{closeness_centrality}}</span></li>
-                        <li><strong>Betweenness Centrality:</strong> <span id = 'betweenness-centrality'>{{betweenness_centrality}}</span></li>
+                        {% endfor %}
                     </ul>
-                </div>
-                
-            </div>
+                </li>
+            </ul>
         </div>
     </div>
 
@@ -56,17 +43,26 @@
     {% endif %}
 
     <script>
-        window.addEventListener("message", function(event) {
-            console.log("Received message from Dash:", event.data);
+        function updateCentrality(nodeId) {
+            fetch(`/get_centrality/${nodeId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("degree-centrality").innerText = data.degree.toFixed(4);
+                    document.getElementById("closeness-centrality").innerText = data.closeness.toFixed(4);
+                    document.getElementById("betweenness-centrality").innerText = data.betweenness.toFixed(4);
+                })
+                .catch(error => console.error('Error fetching centrality data:', error));
+        }
     
-            if (event.data && event.data.degree !== undefined) {
-                document.getElementById("degree-centrality").innerText = event.data.degree.toFixed(4);
-                document.getElementById("closeness-centrality").innerText = event.data.closeness.toFixed(4);
-                document.getElementById("betweenness-centrality").innerText = event.data.betweenness.toFixed(4);
-            } else {
-                console.error("Invalid data received:", event.data);
-            }
-        }, false);
+        document.addEventListener("DOMContentLoaded", function () {
+            let iframe = document.querySelector("iframe");
+            iframe.contentWindow.addEventListener("click", function (event) {
+                let clickedNode = event.detail;
+                if (clickedNode && clickedNode.id) {
+                    updateCentrality(clickedNode.id);
+                }
+            });
+        });
     </script>
 
     <!-- <script>

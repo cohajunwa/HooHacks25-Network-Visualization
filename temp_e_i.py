@@ -1,6 +1,18 @@
-#Temporary file for testing cohesion and homophily of network data
 import pandas as pd
+import networkx as nx
+import scipy
 import numpy as np
+import os
+import json
+import networkx as nx
+from calc_render import*
+#from temp_e_i import*
+import dash
+from dash import dcc, html
+import dash_cytoscape as cyto
+from dash.dependencies import Input, Output
+from dash import dcc, html, Input, Output, State
+
 import transforming_data as transform
 from scipy.stats import norm
 
@@ -21,29 +33,39 @@ def clean_matrix(matrix):
 def calc_ei(matrix, attribute_column):
     """
     Calculates the E-I index for a given matrix.
-    The E-I index is a measure of the cohesion of a network.
-    It is calculated as the difference between the number of edges within blocks and the number of edges between blocks.
     """
+
+    # Ensure matrix is a NumPy array
+    matrix = np.array(matrix)
+
+    # Convert attribute_column to a NumPy array for proper indexing
+    attribute_column = np.array(attribute_column).flatten()
 
     # Get the number of nodes in the matrix
     n = matrix.shape[0]
 
-    # Initialize variables to count edges within and between blocks
+    # Initialize counters for internal and external ties
     I = 0
     E = 0
 
-    # Iterate through the upper triangle of the matrix to count edges
+    # Iterate through the upper triangle of the matrix
     for i in range(n):
         for j in range(i + 1, n):
-            if matrix[i, j] == 1 and attribute_column[i] == attribute_column[j]:
-                I += 1
-            elif matrix[i, j] == 1 and attribute_column[i] != attribute_column[j]:
-                E += 1
+            if matrix[i, j] == 1:
+                if attribute_column[i] == attribute_column[j]:
+                    I += 1
+                else:
+                    E += 1
+
+    # Avoid division by zero
+    if E + I == 0:
+        return 0  
 
     # Calculate the E-I index
     ei_index = (E - I) / (E + I)
-
+    
     return ei_index
+
 
 def generate_ei_permutation(matrix, num_ties):
     """
@@ -67,6 +89,45 @@ def generate_ei_permutation(matrix, num_ties):
 
     return matrix
 
+'''def ei_test(matrix, attribute_column, num_permutations=50):
+    """
+    Performs a permutation test for the E-I index.
+    """
+
+    # Clean the matrix
+    matrix = clean_matrix(matrix)
+
+    # Calculate the observed E-I index
+    observed_ei = calc_ei(matrix, attribute_column)
+
+    # Convert matrix to NumPy array before summing
+    num_ties = int(np.sum(matrix.to_numpy()) // 2)
+
+    # Initialize a list to store E-I permutation scores
+    ei_indices = []
+
+    # Perform the permutations
+    while len(ei_indices) < num_permutations:
+        permuted_matrix = generate_ei_permutation(np.zeros_like(matrix), num_ties)
+        ei_indices.append(calc_ei(permuted_matrix, attribute_column))
+
+    # Calculate the standard deviation of E-I indices
+    ei_std_dev = np.std(ei_indices)
+
+    # Calculate the mean of E-I indices
+    ei_mean = np.mean(ei_indices)
+
+    # Calculate the z-score
+    ei_z_score = (observed_ei - ei_mean) / ei_std_dev
+
+    # Calculate the p-value for a two-tailed test
+    p_value = 2 * (1 - norm.cdf(abs(ei_z_score)))
+
+    # Calculate the confidence interval
+    confidence_interval = [ei_mean - 1.96 * ei_std_dev, ei_mean + 1.96 * ei_std_dev]
+
+    return observed_ei, p_value, confidence_interval'''
+
 def ei_test(matrix, attribute_column, num_permutations=50):
     """
     Performs a permutation test for the E-I index.
@@ -76,20 +137,25 @@ def ei_test(matrix, attribute_column, num_permutations=50):
 
     # Clean the matrix
     matrix = clean_matrix(matrix)
-
+    matrix = matrix.to_numpy()
     # Calculate the observed E-I index
     observed_ei = calc_ei(matrix, attribute_column)
 
     # Initialize a lit to to store E-I permutation scores
     ei_indices = []
 
+    # Convert num_ties to an integer
+    num_ties = int(np.sum(matrix) // 2)
+
     # Perform the permutations
     while len(ei_indices) < num_permutations:
-        permuted_matrix = generate_ei_permutation(np.zeros_like(matrix), np.sum(matrix) // 2)
+        permuted_matrix = generate_ei_permutation(np.zeros_like(matrix), num_ties)
         ei_indices.append(calc_ei(permuted_matrix, attribute_column))
-
     # Calculate the standard deviation of E-I indices
     ei_std_dev = np.std(ei_indices)
+
+    if ei_std_dev == 0:
+        ei_std_dev = 1e-10
 
     # Calculate the mean of E-I indices
     ei_mean = np.sum(ei_indices) / num_permutations
@@ -105,33 +171,6 @@ def ei_test(matrix, attribute_column, num_permutations=50):
 
     return observed_ei, p_value, confidence_interval
 
-def max_ei(matrix, num_ties, attribute_column):
-    """
-    Creates a permutation that maximizes the number of external ties
-    Returns the E-I index of permutation that maximizes heterogeneity
-    """
-
-    maximum_matrix = np.zeros_like(matrix)
-    n = matrix.shape[0]
-
-    while num_ties > 0:
-        # iterate through the upper triangle of the matrix
-        for i in range(n):
-            for j in range(i + 1, n):
-                if num_ties > 0 and attribute_column[i] != attribute_column[j]:
-                    maximum_matrix[i, j] = 1
-                    maximum_matrix[j, i] = 1
-                    num_ties -= 1
-        
-        # if all hetergeneous ties are filled, iterate through the upper triangle again and fill in 0s with 1s
-        for i in range(n):
-            for j in range(i + 1, n):
-                if num_ties > 0 and maximum_matrix[i, j] == 0:
-                    maximum_matrix[i, j] = 1
-                    maximum_matrix[j, i] = 1
-                    num_ties -= 1
-    
-    return calc_ei(maximum_matrix, attribute_column)
 
 def min_ei(matrix, num_ties, attribute_column):
     """

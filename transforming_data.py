@@ -44,14 +44,13 @@ def symmetrize_minimum(matrix):
 
 def symmetrize_maximum(matrix):
     """
-    Given a square matrix in the form of a Pandas DataFrame, the function:
+    Given a square matrix in the form of a NumPy array, the function:
     Symmetrizes the matrix by taking the maximum value between each pair of elements.
     """
-
     for i in range(len(matrix)):
         for j in range(len(matrix)):
             if i != j:
-                matrix.iloc[i, j] = matrix.iloc[j, i] = max(matrix.iloc[i, j], matrix.iloc[j, i])
+                matrix[i, j] = matrix[j, i] = max(matrix[i, j], matrix[j, i])
 
     return matrix
 
