@@ -1,12 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <pre>{{content}}</pre>
-</body>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Network Visualizer</title>
+    <link rel="stylesheet" href="./static/style.css">
+    <script>
+        function showError(message) {
+            alert(message);
+        }
+    </script>
+  </head>
+  <body>
+    <div>
+        <h1>Network Visualization!</h1>
+    </div>
+    <div class="row">
+        <div class="column container">
+            <h2>Plotly viz here</h2>
+        </div>
+        <div class="column">
+            <div class = "container">
+                <h2>Global Measures</h2>
+                <ul align = "left">
+                    <li><strong>Network Density:</strong> {{network_density}}</li>
+                    <li><strong>E-I Indices</strong>
+                        <ul>
+                            {% for attribute, ei_index in ei_indices %}
+                            <li><strong>{{attribute}}:</strong> {{ei_index}}</li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <div class = "container">
+                <div>
+                    <h2>Centrality Measures</h2>
+                    <ul align = "left">
+                        <li><strong>Degree Centrality:</strong> {{degree_centrality}}</li>
+                        <li><strong>Closeness Centrality:</strong> {{closeness_centrality}}</li>
+                        <li><strong>Betweenness Centrality:</strong> {{betweenness_centrality}}</li>
+                    </ul>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    {% if error %}
+    <script>
+        showError("{{ error }}");
+    </script>
+    {% endif %}
+    </body>
 </html>

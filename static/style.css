@@ -23,7 +23,7 @@ h2{
 }
 
 .container {
-    background: white;
+    background: rgba(255, 255, 255, 0.851);
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -51,4 +51,20 @@ input[type="submit"] {
 
 input[type="submit"]:hover {
     background: #0056b3;
+}
+
+.row {
+    display: flex; 
+    justify-content: space-between;
+    width: 80%;
+    max-width: 800px;
+}
+
+.column {
+    width: 48%;
+    padding: 10px;
+}
+
+.column .container {
+    margin-bottom: 20px; /* Adjust spacing as needed */
 }

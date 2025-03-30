@@ -20,13 +20,24 @@ def upload_file():
             error = "Invalid file format! Please upload a .csv file"
             return render_template('index.html', error = error)
 
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         return redirect(url_for('visualize', name = filename))
-    return render_template('index.html')
+    return render_template('index.html' )
 
 
 @app.route('/visualize', methods = ['GET', 'POST'])
 def visualize():
-    return render_template('visuals.html') 
+    network_density = 0.5
+    attributes = ['a', 'b', 'c']
+    ei_indices = [0.2, 0.3, 0.7]
+
+    degree_centrality = 0.3
+    closeness_centrality = 0.4
+    betweenness_centrality = 0.2
+
+    return render_template('visuals.html', network_density = network_density, ei_indices = zip(attributes, ei_indices),
+                            degree_centrality = degree_centrality, closeness_centrality = closeness_centrality,
+                            betweenness_centrality = betweenness_centrality) 
 
 if __name__ == '__main__':
     app.run(host = "0.0.0.0", port = 5000, debug = True)
