@@ -10,14 +10,15 @@ from dash import html
 import math
 
 def read_input(edges, attributes):
-    """Takes in two csv files. The directionality of the edge will be FROM rows TO columns
-    Outputs a dict that is formatted nicely for other functions. This is the first function you call!"""
+    """Takes in two csv files. The directionality of the edge will be FROM rows TO columns"""
     
     df1 = pd.read_csv(edges, index_col=0)
     df2 = pd.read_csv(attributes, index_col=0)
 
     graph_dict = {}
     seen_edges = set()
+    # Initialize attribute dictionary
+    attribute_dict = {}
 
     for row in df1.index:
         for col in df1.columns:
@@ -36,12 +37,25 @@ def read_input(edges, attributes):
 
         # match node from new file
         if row in df2.index:
+            attribute_dict[row] = df2.loc[row].to_dict()  # Convert row to dictionary
             graph_dict.setdefault(row, {}).setdefault("attributes", {})
             for attr_name in df2.columns:  # Use the correct column names from df2
                 graph_dict[row]["attributes"][attr_name] = int(df2.at[row, attr_name])
 
-    #print(json.dumps(graph_dict, indent=4))
-    return graph_dict
+    # Create adjacency matrix
+    nodes = list(graph_dict.keys())  # Extract all nodes
+    node_indices = {node: i for i, node in enumerate(nodes)}  # Map nodes to indices
+    adj_matrix = np.zeros((len(nodes), len(nodes)))  # Initialize with zeros
+
+    for node, data in graph_dict.items():
+        for target, weight in data.get("targets", {}).items():
+            adj_matrix[node_indices[node], node_indices[target]] = weight
+
+    # Convert adjacency matrix to DataFrame for better readability
+    adj_matrix_df = pd.DataFrame(adj_matrix, index=nodes, columns=nodes)
+
+    return graph_dict, df2, adj_matrix_df
+
 
 def make_x_graph(graph_dict, directed=False):
     """makes dict from input reader function above and makes it an object in networkx. This
@@ -86,14 +100,12 @@ def format_for_dash_cytoscape(graph_dict, G):
     return elements
 
 def node_calculation(G):
-    '''botton box calculations for each node, returns 3 dicts and takes a networkx object'''
     dc = nx.degree_centrality(G)
     bc = nx.betweenness_centrality(G)
     cc = nx.closeness_centrality(G)
     return dc,bc,cc
 
 def network_calculations(G):
-    '''Top boc calculations for entire network, takes networkx object and outputs two values'''
     m = len(G.edges)
     n = len(G.nodes)
     d = m/(n*(n-1))
@@ -103,6 +115,7 @@ def network_calculations(G):
     #I = sum(1 for u, v in G.edges if node_groups[u] == node_groups[v])
     #ei_index = (E - I) / (E + I) if (E + I) != 0 else 0    
     return d
+ 
  
 
 def calculate_positions(graph_dict, G = None):
@@ -181,14 +194,17 @@ def calculate_circular_positions(graph_dict, G):
     return positions
 
 def make_dash(g_dict):
-    """Makes dash visualization! Takes in dict from input reader and calls other functions in this script. Will output application"""
+    """Creates a Dash visualization. Displays attributes of a node when clicked."""
+    
+    # Create Cytoscape elements
     G = make_x_graph(g_dict)
     cytoscape_elements = format_for_dash_cytoscape(g_dict, G)
-
+    
     # Dash App
     app = dash.Dash(__name__)
 
     app.layout = html.Div([
+        # Cytoscape Graph
         cyto.Cytoscape(
             id='cytoscape-graph',
             elements=cytoscape_elements,
@@ -197,18 +213,53 @@ def make_dash(g_dict):
             stylesheet=[
                 {'selector': 'node', 'style': {'label': 'data(label)', 'background-color': 'data(color)'}},
                 {'selector': 'edge', 'style': {'curve-style': 'bezier', 'target-arrow-shape': 'triangle'}}
-            ]
+            ],
+        ),
+
+        # Textbox to display node attributes
+        html.Div(
+            id='node-attributes',
+            style={'marginTop': '20px', 'border': '1px solid black', 'padding': '10px', 'width': '50%'}
         )
     ])
+
+    # Callback to update textbox with node's attributes
+    @app.callback(
+        Output('node-attributes', 'children'),
+        Input('cytoscape-graph', 'selectedNodeData')  # Listens for node clicks
+    )
+    def display_node_attributes(selectedNodeData):
+        """Displays attributes of the clicked node."""
+        if selectedNodeData and len(selectedNodeData) > 0:
+            node_id = selectedNodeData[0]['id']  # Get the node's ID
+            node_data = g_dict.get(node_id, {})
+            attributes = node_data.get('attributes', {})
+            
+            # Generate attribute text
+            attributes_text = [html.H4(f"Attributes of node {node_id}:")]
+            for key, value in attributes.items():
+                attributes_text.append(html.P(f"{key}: {value}"))
+            
+            return attributes_text
+        
+        return html.P("Click on a node to see its attributes.")
 
     app.run_server(debug=True)
 
 if __name__ == '__main__':
-    # Example usage FOR COMFORT
-    g_dict = read_input("example_book1.csv", "attributes.csv")
-    make_dash(g_dict)
-
-    G = make_x_graph(g_dict)
+    g_dict, df2, matrix = read_input("example_book.csv", "attributes.csv")
+    #make_dash(g_dict)
+    # Rename the first column (since it's unnamed)
+    df2.rename(columns={df2.columns[0]: "State"}, inplace=True)
+    attributes = df2.to_numpy()
+   
     dc, bc, cc = node_calculation(G) # Dynamically updated, must search for node ID in dict
-    d, ei = network_calculations(G) # Static scalar values
+    
+    d = network_calculations(G) # Static scalar values
+    attributes_col = []
+    for i in range(len(attributes[0])):
+        for row in attributes:
+            attributes_col.append(row[i])
+        observed_ei, p_value, confidence_interval = ei_test(matrix, attributes_col, num_permutations=50)
+        print(observed_ei, p_value, confidence_interval)
     
