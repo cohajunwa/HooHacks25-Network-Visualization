@@ -6,8 +6,14 @@ import os
 import json
 import dash
 import dash_cytoscape as cyto
-from dash import html
+from dash import html, dcc
 import math
+from temp_ei import*
+from dash.dependencies import Input, Output
+from dash import dcc, html, Input, Output, State
+
+import transforming_data as transform
+from scipy.stats import norm
 
 def read_input(edges, attributes):
     """Takes in two csv files. The directionality of the edge will be FROM rows TO columns"""
@@ -76,11 +82,28 @@ def make_x_graph(graph_dict, directed=False):
 
     return G
 
+def node_calculation(G):
+    dc = nx.degree_centrality(G)
+    bc = nx.betweenness_centrality(G)
+    cc = nx.closeness_centrality(G)
+    return dc,bc,cc
+
+def network_calculations(G):
+    m = len(G.edges)
+    n = len(G.nodes)
+    d = m/(n*(n-1))
+
+    #node_groups = {"A": "Group1", "B": "Group1", "C": "Group2", "D": "Group2"}
+    #E = sum(1 for u, v in G.edges if node_groups[u] != node_groups[v])
+    #I = sum(1 for u, v in G.edges if node_groups[u] == node_groups[v])
+    #ei_index = (E - I) / (E + I) if (E + I) != 0 else 0    
+    return d
+ 
 def format_for_dash_cytoscape(graph_dict, G):
-    """Converts the graph dictionary into a format suitable for Dash Cytoscape (directed edges).
-    You do not have to call this function comfort!"""
+    """Converts the graph dictionary into a format suitable for Dash Cytoscape (directed edges)."""
+    
     elements = []
-    node_positions = calculate_circular_positions(graph_dict, G)  # Get node positions dynamically
+    node_positions = calculate_positions(graph_dict, G)  # Get node positions dynamically
 
     # Add nodes with positions
     for node, data in graph_dict.items():
@@ -99,27 +122,9 @@ def format_for_dash_cytoscape(graph_dict, G):
 
     return elements
 
-def node_calculation(G):
-    dc = nx.degree_centrality(G)
-    bc = nx.betweenness_centrality(G)
-    cc = nx.closeness_centrality(G)
-    return dc,bc,cc
-
-def network_calculations(G):
-    m = len(G.edges)
-    n = len(G.nodes)
-    d = m/(n*(n-1))
-
-    #node_groups = {"A": "Group1", "B": "Group1", "C": "Group2", "D": "Group2"}
-    #E = sum(1 for u, v in G.edges if node_groups[u] != node_groups[v])
-    #I = sum(1 for u, v in G.edges if node_groups[u] == node_groups[v])
-    #ei_index = (E - I) / (E + I) if (E + I) != 0 else 0    
-    return d
- 
- 
-
-def calculate_positions(graph_dict, G = None):
+def calculate_positions(graph_dict, G):
     """Dynamically spaces out nodes in a circular layout."""
+    dc, bc, cc = node_calculation(G)
     num_nodes = len(graph_dict)
     angle_step = 2 * math.pi / max(num_nodes, 1)  # Angle between nodes
 
@@ -192,6 +197,7 @@ def calculate_circular_positions(graph_dict, G):
         positions[node] = {"x": x, "y": y}
 
     return positions
+
 
 def make_dash(g_dict):
     """Creates a Dash visualization. Displays attributes of a node when clicked."""
@@ -278,12 +284,13 @@ def make_dash(g_dict):
     # app.run_server(debug=True)
 
 if __name__ == '__main__':
-    g_dict, df2, matrix = read_input("example_book.csv", "attributes.csv")
-    #make_dash(g_dict)
+
+    g_dict, df2, matrix = read_input("campnet.csv", "campattr.csv")
+    make_dash(g_dict)
     # Rename the first column (since it's unnamed)
     df2.rename(columns={df2.columns[0]: "State"}, inplace=True)
     attributes = df2.to_numpy()
-   
+    G = make_x_graph(g_dict)
     dc, bc, cc = node_calculation(G) # Dynamically updated, must search for node ID in dict
     
     d = network_calculations(G) # Static scalar values
