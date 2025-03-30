@@ -15,11 +15,15 @@ from dash import dcc, html, Input, Output, State
 import transforming_data as transform
 from scipy.stats import norm
 
-def read_input(edges, attributes):
+def read_input(edges, attributes = "not given"):
     """Takes in two csv files. The directionality of the edge will be FROM rows TO columns"""
     
     df1 = pd.read_csv(edges, index_col=0)
-    df2 = pd.read_csv(attributes, index_col=0)
+    block_display = 0
+    if attributes == "not given":
+        block_display = 1
+    else:
+        df2 = pd.read_csv(attributes, index_col=0)
 
     graph_dict = {}
     seen_edges = set()
@@ -42,7 +46,7 @@ def read_input(edges, attributes):
                 seen_edges.add(edge)
 
         # match node from new file
-        if row in df2.index:
+        if block_display == 0 and row in df2.index:
             attribute_dict[row] = df2.loc[row].to_dict()  # Convert row to dictionary
             graph_dict.setdefault(row, {}).setdefault("attributes", {})
             for attr_name in df2.columns:  # Use the correct column names from df2
@@ -60,7 +64,10 @@ def read_input(edges, attributes):
     # Convert adjacency matrix to DataFrame for better readability
     adj_matrix_df = pd.DataFrame(adj_matrix, index=nodes, columns=nodes)
 
-    return graph_dict, df2, adj_matrix_df
+    if block_display == 0:
+        return graph_dict, df2, adj_matrix_df
+    else: 
+        return graph_dict, adj_matrix_df
 
 
 def make_x_graph(graph_dict, directed=False):
@@ -284,7 +291,7 @@ def make_dash(g_dict):
     # app.run_server(debug=True)
 
 if __name__ == '__main__':
-
+    # Phase 1
     g_dict, df2, matrix = read_input("campnet.csv", "campattr.csv")
     make_dash(g_dict)
     # Rename the first column (since it's unnamed)
@@ -300,4 +307,11 @@ if __name__ == '__main__':
             attributes_col.append(row[i])
         observed_ei, p_value, confidence_interval = ei_test(matrix, attributes_col, num_permutations=50)
         print(observed_ei, p_value, confidence_interval)
+
+    # Phase 2
+    graph_dict, adj_matrix_df = read_input("campnet.csv")
+    make_dash(g_dict)
+    G2 = make_x_graph(g_dict)
+    #d2 = network_calculations(G2) # Static scalar values
+
     
