@@ -27,7 +27,7 @@ def write_matrix(matrix, file_path, file_name, sep='\t'):
     output_path = os.path.join(output_dir, file_name)
     matrix.to_csv(output_path, sep=sep, index=False)
 
-    return "Matrix saved to " + output_path
+    return "Symmetrized matrix saved to " + output_path
 
 def symmetrize_minimum(matrix):
     """
